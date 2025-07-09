@@ -3,18 +3,6 @@ FROM rocker/r-ver:4.4.1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libxml2-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    liblzma-dev \
-    libncurses5-dev \
-    libncursesw5-dev \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && apt-get install -y \
     # Base build tools
     build-essential \
     curl \
@@ -31,6 +19,9 @@ RUN apt-get update && apt-get install -y \
     liblzma-dev \
     libncurses5-dev \
     libncursesw5-dev \
+    libpng-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
     # Clean up apt cache to reduce image size
     && rm -rf /var/lib/apt/lists/*
 

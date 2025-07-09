@@ -14,20 +14,45 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install renv (no need to snapshot here)
-RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org/')"
+RUN apt-get update && apt-get install -y \
+    # Base build tools
+    build-essential \
+    curl \
+    git \
+    # Python & venv tools
+    python3 python3-pip python3-venv \
+    # SSL and crypto
+    libssl-dev libffi-dev \
+    # R system libraries
+    libcurl4-openssl-dev \
+    libxml2-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    liblzma-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
+    # Clean up apt cache to reduce image size
+    && rm -rf /var/lib/apt/lists/*
 
-# Create a working directory in the container
+# Install env managers
+RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org/')"
+RUN pip install poetry==2.1.1 && poetry config virtualenvs.create false
+
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy renv.lock and renv/activate.R into the image
-COPY renv.lock renv.lock
-COPY renv/activate.R renv/activate.R
+# Copy environment files
+COPY renv.lock renv/activate.R ./
+COPY pyproject.toml poetry.lock ./
 
 # Restore the environment exactly as in the lockfile
 RUN R -e "renv::restore()"
+RUN poetry install --no-root
 
+# Copy scripts and other necessary files
 COPY scripts/ /app/
 
+ENV RETICULATE_PYTHON=/usr/bin/python3
+
 # Default to interactive R session
-ENTRYPOINT ["Rscript", "deconstructsigs_assignment.R"]
+ENTRYPOINT ["Rscript", "main.R"]

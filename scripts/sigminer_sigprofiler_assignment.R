@@ -9,16 +9,18 @@ library(BSgenome.Hsapiens.UCSC.hg19)
 library(quadprog)
 library(sigminer)
 
+use_python("/usr/bin/python3", required = TRUE)
 
-run_deconstructsigs <- function(maf, signatures, output) {
+run_sigminer_sigprofiler <- function(maf, signatures, output_dir) {
   # Get input data
   genie_maf<-read_tsv(maf)
 
-  results_dir <- file.path(output,"/results")
-  output_dir <- file.path("./tmp/output")
+  results_dir <- file.path(output_dir,"/results")
+  tmp_dir <- file.path("./tmp/output")
 
   dir.create(file.path(results_dir, "SigProfiler_Cosmic_V3.4"), recursive = TRUE, showWarnings = FALSE)
   dir.create(file.path(results_dir, "SigMiner_Cosmic_V3.4"), recursive = TRUE, showWarnings = FALSE)
+  dir.create(file.path(tmp_dir, "RObjects"), recursive = TRUE, showWarnings = FALSE)
 
 
   # Sigminer has a great tool for loading and extracting the Tally from maf data based on maftool package
@@ -30,16 +32,16 @@ run_deconstructsigs <- function(maf, signatures, output) {
                                       genome_build = "hg19",
                                       useSyn = TRUE)
 
-  saveRDS(MAF, file.path(output_dir, "RObjects", "MAF_all.rds"))
+  saveRDS(MAF, file.path(tmp_dir, "RObjects", "MAF_all.rds"))
 
-  saveRDS(mt_tally_SNV, file.path(output_dir, "RObjects",  "mt_tally_SNV.rds"))
+  saveRDS(mt_tally_SNV, file.path(tmp_dir, "RObjects",  "mt_tally_SNV.rds"))
 
   # Save a transposed version for SigProfiler
   transposed <- data.frame(MutationType = colnames(mt_tally_SNV$nmf_matrix), t(mt_tally_SNV$nmf_matrix))
 
-  data.table::fwrite(x = transposed, sep = "\t", quote = F, row.names = F, file = file.path(output_dir, "ALL_nmf_matrix.txt"))
+  data.table::fwrite(x = transposed, sep = "\t", quote = F, row.names = F, file = file.path(tmp_dir, "ALL_nmf_matrix.txt"))
 
-  data <- file.path(output_dir, "ALL_nmf_matrix.txt")
+  data <- file.path(tmp_dir, "ALL_nmf_matrix.txt")
 
   cosmic_fit(data, 
             output = file.path(results_dir, "SigProfiler_Cosmic_V3.4"), 

@@ -2,13 +2,18 @@
 FROM rocker/r-ver:4.4.1
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install -y \
     # Base build tools
     build-essential \
     curl \
     git \
+    cmake \
     # Python & venv tools
-    python3 python3-pip python3-venv \
+    python3.11 python3.11-venv python3.11-distutils \
     # SSL and crypto
     libssl-dev libffi-dev \
     # R system libraries
@@ -22,8 +27,21 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libfontconfig1-dev \
     libfreetype6-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libtiff5-dev \
+    libjpeg-dev \
+    libgit2-dev \
     # Clean up apt cache to reduce image size
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    # Symlink to make python3/python point to python3.11
+    && ln -sf /usr/bin/python3.11 /usr/bin/python3 \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python \
+    # Install pip for this Python version
+    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3 && \
+    # Verify the versions
+    python3 --version && python --version
+
 
 # Install env managers
 RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org/')"
@@ -36,14 +54,15 @@ WORKDIR /app
 COPY renv.lock renv/activate.R ./
 COPY pyproject.toml poetry.lock ./
 
+
 # Restore the environment exactly as in the lockfile
 RUN R -e "renv::restore()"
 RUN poetry install --no-root
 
-# Copy scripts and other necessary files
+# # Copy scripts and other necessary files
 COPY scripts/ /app/
 
 ENV RETICULATE_PYTHON=/usr/bin/python3
 
-# Default to interactive R session
+# # Default to interactive R session
 ENTRYPOINT ["Rscript", "main.R"]

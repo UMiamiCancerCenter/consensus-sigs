@@ -9,19 +9,13 @@ library(BSgenome.Hsapiens.UCSC.hg19)
 library(quadprog)
 library(sigminer)
 
-use_python("/usr/bin/python3", required = TRUE)
+python_path <- Sys.getenv("RETICULATE_PYTHON", unset = NA)
+use_python(python_path, required = TRUE)
 
-run_sigminer_sigprofiler <- function(maf, signatures, output_dir) {
-  # Get input data
-  genie_maf<-read_tsv(maf)
-
-  results_dir <- file.path(output_dir,"/results")
+run_sigminer_sigprofiler <- function(maf, signatures, result_dir) {
   tmp_dir <- file.path("./tmp/output")
 
-  dir.create(file.path(results_dir, "SigProfiler_Cosmic_V3.4"), recursive = TRUE, showWarnings = FALSE)
-  dir.create(file.path(results_dir, "SigMiner_Cosmic_V3.4"), recursive = TRUE, showWarnings = FALSE)
   dir.create(file.path(tmp_dir, "RObjects"), recursive = TRUE, showWarnings = FALSE)
-
 
   # Sigminer has a great tool for loading and extracting the Tally from maf data based on maftool package
   MAF <- sigminer::read_maf(maf = maf)

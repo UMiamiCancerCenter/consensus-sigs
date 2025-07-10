@@ -1,22 +1,18 @@
 # Start with rocker using your R version
 FROM rocker/r-ver:4.4.1
 
+
 # Install system dependencies
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && \
-    apt-get install -y \
-    # Base build tools
+    apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     git \
     cmake \
-    # Python & venv tools
-    python3.11 python3.11-venv python3.11-distutils \
-    # SSL and crypto
-    libssl-dev libffi-dev \
-    # R system libraries
+    wget \
+    bzip2 \
+    libssl-dev \
+    libffi-dev \
     libcurl4-openssl-dev \
     libxml2-dev \
     zlib1g-dev \
@@ -31,38 +27,44 @@ RUN apt-get update && \
     libfribidi-dev \
     libtiff5-dev \
     libjpeg-dev \
-    libgit2-dev \
-    # Clean up apt cache to reduce image size
-    && rm -rf /var/lib/apt/lists/* \
-    # Symlink to make python3/python point to python3.11
-    && ln -sf /usr/bin/python3.11 /usr/bin/python3 \
-    && ln -sf /usr/bin/python3.11 /usr/bin/python \
-    # Install pip for this Python version
-    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3 && \
-    # Verify the versions
-    python3 --version && python --version
+    libgit2-dev && \
+    rm -rf /var/lib/apt/lists/*
 
+# Install Miniconda
+ENV CONDA_DIR=/opt/conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p $CONDA_DIR && \
+    rm /tmp/miniconda.sh && \
+    $CONDA_DIR/bin/conda clean -afy
 
-# Install env managers
+# Put conda in PATH
+ENV PATH=$CONDA_DIR/bin:$PATH
+
+# Install Python 3.11 with conda
+RUN conda install -y python=3.11 && \
+    conda clean -afy
+
+# Install renv for R
 RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org/')"
+
+# Install Poetry
 RUN pip install poetry==2.1.1 && poetry config virtualenvs.create false
 
-# Set the working directory inside the container
+ENV RETICULATE_PYTHON=$CONDA_DIR/bin/python
+
+# Set working directory
 WORKDIR /app
 
-# Copy environment files
+# Copy lockfiles
 COPY renv.lock renv/activate.R ./
 COPY pyproject.toml poetry.lock ./
 
-
-# Restore the environment exactly as in the lockfile
+# Restore R and Python envs
 RUN R -e "renv::restore()"
 RUN poetry install --no-root
 
-# # Copy scripts and other necessary files
+# Copy scripts
 COPY scripts/ /app/
 
-ENV RETICULATE_PYTHON=/usr/bin/python3
-
-# # Default to interactive R session
+# Entrypoint
 ENTRYPOINT ["Rscript", "main.R"]

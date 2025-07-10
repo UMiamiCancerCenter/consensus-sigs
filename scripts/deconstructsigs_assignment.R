@@ -4,32 +4,26 @@ library(dplyr)
 library(tibble)
 library(ggplot2)
 library(forcats)
+library(rlang)
  
-run_deconstructsigs <- function(maf, signatures, output) {
+run_deconstructsigs <- function(maf, signatures, result_dir) {
   # Get input data
-  genie_maf<-read_tsv(maf)
+  maf_table<-read_tsv(maf)
   cosmic_v3_4_signatures<-readRDS(signatures)
 
   # Assign signatures
-  sample_ids<-unique(genie_maf$Tumor_Sample_Barcode)
+  sample_ids<-unique(maf_table$Tumor_Sample_Barcode)
   sample_sigs<-list()
   failed<-c()
   n<- 0
   sample_signatures<-lapply(sample_ids, function(sample_id){
     tryCatch({
-      one_sample_mutations<-genie_maf%>%
+      one_sample_mutations<-maf_table%>%
         filter(
-          Tumor_Sample_Barcode == sample_id
+          .data$Tumor_Sample_Barcode == sample_id
         )%>%
         select(
-          Tumor_Sample_Barcode, Chromosome, Start_Position, Reference_Allele, Tumor_Seq_Allele2
-        )%>%
-        rename(
-          Sample = Tumor_Sample_Barcode, 
-          chr = Chromosome, 
-          pos = Start_Position, 
-          ref = Reference_Allele, 
-          alt = Tumor_Seq_Allele2
+          Sample = "Tumor_Sample_Barcode", chr = "Chromosome", pos = "Start_Position", ref = "Reference_Allele", alt = "Tumor_Seq_Allele2"
         )
       
       sigs_input<-mut.to.sigs.input(mut.ref = as.data.frame(one_sample_mutations),
@@ -58,6 +52,5 @@ run_deconstructsigs <- function(maf, signatures, output) {
 
   # All signatures matrix
   all_weights_matrix<-as.matrix(do.call(rbind, signature_weights_list))
-  # write_csv(rownames_to_column(as.data.frame(max_weights_matrix), var = "sample_name"), file.path(output, "deconstructSigs_cosmic_v3_4_signature.csv"))
-  write_csv(rownames_to_column(as.data.frame(all_weights_matrix), var = "sample_name"), file.path(output, "deconstructSigs_cosmic_v3_4_all_signatures.csv"))
+  write_csv(rownames_to_column(as.data.frame(all_weights_matrix), var = "sample_name"), file.path(result_dir, "deconstructSigs_V3.4", "deconstructSigs_cosmic_v3_4_all_signatures.csv"))
 }

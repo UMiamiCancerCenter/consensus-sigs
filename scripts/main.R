@@ -19,7 +19,12 @@ if (is.null(opt$maf) || is.null(opt$signatures) || is.null(opt$output)) {
 source("deconstructsigs_assignment.R")
 source("sigminer_sigprofiler_assignment.R")
 
-run_deconstructsigs(maf = opt$maf, signatures = opt$signatures, output_dir = opt$output)
-run_sigminer_sigprofiler(maf = opt$maf, signatures = opt$signatures, output_dir = opt$output)
+results_dir <- file.path(opt$output,"/results")
+for (subdir in c("SigProfiler_Cosmic_V3.4", "SigMiner_Cosmic_V3.4", "deconstructSigs_V3.4")) {
+  dir.create(file.path(results_dir, subdir), recursive = TRUE, showWarnings = FALSE)
+}
+
+run_deconstructsigs(maf = opt$maf, signatures = opt$signatures, result_dir = results_dir)
+run_sigminer_sigprofiler(maf = opt$maf, signatures = opt$signatures, result_dir = results_dir)
 
 cat("All signature assignments completed successfully.\n")

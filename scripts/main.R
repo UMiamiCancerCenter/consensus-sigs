@@ -1,6 +1,8 @@
 #!/usr/bin/env Rscript
 
 library(optparse)
+source("deconstructsigs_assignment.R")
+source("sigminer_sigprofiler_assignment.R")
 
 option_list <- list(
   make_option(c("-m", "--maf"), type = "character", help = "Path to MAF input file", metavar = "FILE"),
@@ -16,15 +18,12 @@ if (is.null(opt$maf) || is.null(opt$signatures) || is.null(opt$output)) {
   stop("All options must be provided: --maf, --signatures, --output")
 }
 
-source("deconstructsigs_assignment.R")
-source("sigminer_sigprofiler_assignment.R")
-
-results_dir <- file.path(opt$output,"/results")
+results_dir <- file.path(opt$output, "/consensus_sigs_results")
 for (subdir in c("SigProfiler_Cosmic_V3.4", "SigMiner_Cosmic_V3.4", "deconstructSigs_V3.4")) {
   dir.create(file.path(results_dir, subdir), recursive = TRUE, showWarnings = FALSE)
 }
 
-run_deconstructsigs(maf = opt$maf, signatures = opt$signatures, result_dir = results_dir)
-run_sigminer_sigprofiler(maf = opt$maf, signatures = opt$signatures, result_dir = results_dir)
+run_deconstructsigs(maf = opt$maf, signatures = opt$signatures, results_dir = results_dir)
+run_sigminer_sigprofiler(maf = opt$maf, signatures = opt$signatures, results_dir = results_dir)
 
 cat("All signature assignments completed successfully.\n")

@@ -65,6 +65,7 @@ RUN poetry install --no-root
 
 # Copy scripts
 COPY scripts/ /app/
+COPY resources/ /app/resources/
 
 # Entrypoint
 ENTRYPOINT ["Rscript", "main.R"]

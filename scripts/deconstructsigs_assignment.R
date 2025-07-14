@@ -6,10 +6,10 @@ library(ggplot2)
 library(forcats)
 library(rlang)
 
-run_deconstructsigs <- function(maf, signatures, results_dir) {
+run_deconstructsigs <- function(maf, results_dir) {
   # Get input data
   maf_table <- read_tsv(maf)
-  cosmic_v3_4_signatures <- readRDS(signatures)
+  cosmic_v3_4_signatures <- readRDS("./resources/deconstruct_sigs/signatures_SBS_cosmic.v3.4.rds")
 
   # Run deconstructSigs assignment
   sample_ids <- unique(maf_table$Tumor_Sample_Barcode)
@@ -21,8 +21,8 @@ run_deconstructsigs <- function(maf, signatures, results_dir) {
           filter(
             .data$Tumor_Sample_Barcode == sample_id
           ) %>%
-          select(
-            Sample = "Tumor_Sample_Barcode", chr = "Chromosome", pos = "Start_Position", ref = "Reference_Allele", alt = "Tumor_Seq_Allele2"
+          dplyr::select(
+            Sample = Tumor_Sample_Barcode, chr = Chromosome, pos = Start_Position, ref = Reference_Allele, alt = Tumor_Seq_Allele2
           )
 
         sigs_input <- mut.to.sigs.input(
@@ -39,6 +39,7 @@ run_deconstructsigs <- function(maf, signatures, results_dir) {
       },
       error = function(e) {
         failed <- c(failed, sample_id)
+        return(NULL)
       }
     )
   })
@@ -53,5 +54,5 @@ run_deconstructsigs <- function(maf, signatures, results_dir) {
 
   # Save all signatures matrix
   all_weights_matrix <- as.matrix(do.call(rbind, signature_weights_list))
-  write_csv(rownames_to_column(as.data.frame(all_weights_matrix), var = "sample_name"), file.path(results_dir, "deconstructSigs_V3.4", "deconstructSigs_cosmic_v3_4_all_signatures.csv"))
+  write_csv(rownames_to_column(as.data.frame(all_weights_matrix), var = "sample_name"), file.path(results_dir, "deconstructSigs_Cosmic_V3.4", "deconstructSigs_assignment.csv"))
 }

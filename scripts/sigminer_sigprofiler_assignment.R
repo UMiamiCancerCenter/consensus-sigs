@@ -12,7 +12,7 @@ library(sigminer)
 python_path <- Sys.getenv("RETICULATE_PYTHON", unset = NA)
 use_python(python_path, required = TRUE)
 
-run_sigminer_sigprofiler <- function(maf, signatures, results_dir) {
+run_sigminer_sigprofiler <- function(maf, results_dir) {
   tmp_dir <- file.path("./tmp/output")
 
   dir.create(file.path(tmp_dir, "RObjects"), recursive = TRUE, showWarnings = FALSE)
@@ -64,5 +64,5 @@ run_sigminer_sigprofiler <- function(maf, signatures, results_dir) {
     return_class = "data.table", exome = TRUE
   )
 
-  data.table::fwrite(sep = ",", x = cosmic_v3, file = file.path(results_dir, "SigMiner_Cosmic_V3.4", "SigMiner.csv"))
+  data.table::fwrite(sep = ",", x = cosmic_v3, file = file.path(results_dir, "SigMiner_Cosmic_V3.4", "SigMiner_assignment.csv"))
 }

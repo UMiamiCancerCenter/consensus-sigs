@@ -115,7 +115,7 @@ run_consensus_pipeline <- function(results_dir) {
     tibble::rownames_to_column("SAMPLE_ID")
 
   bin_consensus_table <- consensus_table %>%
-    mutate(across(-any_of("SAMPLE_ID"), ~ if_else(.x >= 2, 1, 0)))
+    mutate(across(-any_of("SAMPLE_ID"), ~ if_else(.x >= 3, 1, 0)))
 
   data.table::fwrite(x = consensus_table, sep = ",", row.names = FALSE, file = file.path(results_dir, "consensus", "consensus_table.csv"))
   data.table::fwrite(x = bin_consensus_table, sep = ",", row.names = FALSE, file = file.path(results_dir, "consensus", "bin_consensus_table.csv"))

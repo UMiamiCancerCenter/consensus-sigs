@@ -26,3 +26,50 @@ For each sample, a signature group is considered present if at least one of its 
 To facilitate comparison across methods, the results from each tool are dichotomized to indicate the presence or absence of a given signature in each sample. A signature group is assigned a value of 1 (present) if its reported contribution exceeded zero, or 0 (absent) otherwise. Using this approach, a consensus matrix is generated, where each cell represents the number of tools that assigned a given signature group to a sample.
 
 The consensus is then used to determine the most relevant signature for each sample. The signature group with the highest number of tool-based assignments (i.e., majority vote across the four algorithms) is selected as the predominant one. In cases of ties, where multiple signature groups received the same maximum number of votes, no single dominant signature is assigned.
+
+## Running with Docker
+
+First, pull the container image:
+
+```sh
+docker pull jip2013/consensus-sigs:v0.2
+```
+
+You can then run the consensus-sigs pipeline using the provided container. Mount your data directory and specify the input and output paths as follows:
+
+```sh
+docker run --rm -v ./data:/data consensus-sigs -m /data/data_mutations_extended.txt -o /data
+```
+
+- `-v ./data:/data` mounts your local `data` directory to `/data` inside the container.
+- `-m` specifies the input MAF file path (inside the container).
+- `-o` specifies the output directory (inside the container).
+
+## Running Algorithms Individually (Without Docker)
+
+If you prefer to run the algorithms outside the container, you can use the provided environment lock files to set up the necessary dependencies for R or Python:
+
+### R Environment (using `renv.lock`)
+
+1. Install [renv](https://rstudio.github.io/renv/) in R if you don’t have it:
+   ```r
+   install.packages("renv")
+   ```
+2. In the project directory, restore the environment:
+   ```r
+   renv::restore()
+   ```
+3. You can now run any of the R scripts (e.g., `scripts/deconstructsigs_assignment.R`, `scripts/mesica_assignment.R`) with all required packages installed.
+
+### Python Environment (using `poetry.lock`)
+
+1. Install [Poetry](https://python-poetry.org/docs/#installation) if you don’t have it.
+2. In the project directory, install dependencies:
+   ```sh
+   poetry install
+   ```
+3. Activate the Poetry environment (for zsh/bash):
+   ```sh
+   $(poetry env activate)
+   ```
+4. You can now run Python scripts (e.g., for SigProfilerAssignment) with all required packages.
